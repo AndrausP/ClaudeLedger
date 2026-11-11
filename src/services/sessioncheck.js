@@ -138,6 +138,9 @@ function compareLive(profile, live) {
     const disabled = (profile.disabledPlugins || []).map((k) => k.split('@')[0]);
     const leaked = disabled.filter((n) => loaded.has(n));
     items.push(item('live-plugins', 'Plugins desligados pelo perfil', leaked.length ? 'fail' : 'ok', leaked.length ? 'Carregados mesmo assim: ' + leaked.join(', ') : disabled.length ? 'Nenhum dos ' + disabled.length + ' plugin(s) desligado(s) foi carregado.' : 'O perfil não desliga plugins. Carregados: ' + [...loaded].join(', ')));
+    const orch = loaded.has('orchestra');
+    if (profile.orchestra) items.push(item('live-orchestra', 'Orchestra Core', orch ? 'ok' : 'fail', orch ? 'Plugin orchestra carregado na sessão.' : 'O perfil liga o Orchestra, mas a sessão não carregou o plugin. Reaplique o perfil (ele instala o plugin).'));
+    else if (orch) items.push(item('live-orchestra', 'Orchestra Core', 'warn', 'O perfil não usa o Orchestra, mas o plugin foi carregado.'));
     const blocked = profile.blockedMcp || [];
     if (blocked.length) {
       const prefix = (id) => (id.includes('/') ? 'mcp__plugin_' + id.replace('/', '_') + '__' : 'mcp__' + id + '__');

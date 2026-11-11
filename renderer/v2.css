@@ -58,3 +58,12 @@ button.fexbtn.on { border-color: rgba(242, 104, 95, .55); }
 .pcrow span { display: block; color: var(--mute); font-size: 13px; line-height: 1.5; margin-top: 2px; }
 
 .pchist { margin: 10px 0 6px; } .pchist summary { cursor: pointer; color: var(--mute); font-size: 13px; padding: 6px 0; } .pchist table { margin-top: 6px; }
+
+/* ====== canto inferior esquerdo: perfil ativo ====== */
+.profbadge button { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; background: transparent; border: 1px solid var(--line); border-radius: 8px; color: inherit; cursor: pointer; text-align: left; }
+.profbadge button:hover { border-color: var(--accent); }
+.profbadge svg { width: 18px; height: 18px; flex: none; color: var(--accent); }
+.profbadge span { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.profbadge small { color: var(--mute); font-size: 11px; }
+.profbadge b { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.profbadge em { font-style: normal; font-size: 11px; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 1px 7px; flex: none; }

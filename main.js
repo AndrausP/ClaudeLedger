@@ -70,6 +70,24 @@ async function shoot(dir) {
     wc.on('console-message', (e) => { if (e.level === 'error' || e.level === 'warning') log(e.message); });
     win.show(); win.focus();
     await new Promise((r) => setTimeout(r, 9000));
+    if (process.env.LEDGER_SHOT_ONLY === 'perfis') {
+      // só a parte de perfis; troca o perfil ativo SÓ na memória da tela (não grava nada no Claude Code)
+      const tabs = () => wc.executeJavaScript(`[...document.querySelectorAll('#tabs [data-tab]')].map(b => b.dataset.tab).join(',')`);
+      const badge = () => wc.executeJavaScript(`document.getElementById('profbadge').innerText.replace(/\\s+/g,' ')`);
+      log('real: abas=' + await tabs() + ' | canto=' + await badge());
+      await step(`S.P = { ...S.P, profiles: [...S.P.profiles, { id: 'tmp-o', name: 'Dev com Orchestra', orchestra: true }, { id: 'tmp-n', name: 'Dev sem Orchestra', orchestra: false }], active: 'tmp-o' }; renderTabs(); document.querySelector('[data-tab=orchestra]').click()`, 1500);
+      log('perfil COM orchestra: abas=' + await tabs() + ' | canto=' + await badge() + ' | tela=' + await wc.executeJavaScript(`document.getElementById('ptitle').textContent`));
+      await snap('perfil-com-orchestra');
+      await step(`S.P.active = 'tmp-n'; renderTabs(); render()`, 800);
+      log('perfil SEM orchestra: abas=' + await tabs() + ' | canto=' + await badge() + ' | tela=' + await wc.executeJavaScript(`document.getElementById('ptitle').textContent`));
+      await step(`S.editId = 'tmp-o'; document.querySelector('#profbadge [data-tab]').click()`, 6000);
+      log('clique no canto -> ' + await wc.executeJavaScript(`document.getElementById('ptitle').textContent`) + ' | checkbox orchestra=' + await wc.executeJavaScript(`!!document.querySelector('[data-pb=orchestra]') && document.querySelector('[data-pb=orchestra]').checked`)
+        + ' | orchestra fora da lista de plugins=' + await wc.executeJavaScript(`![...document.querySelectorAll('[data-pl]')].some(x => x.dataset.pl.startsWith('orchestra@'))`)
+        + ' | card=' + await wc.executeJavaScript(`(document.querySelector('.pccard')||{innerText:''}).innerText.replace(/\\s+/g,' ').slice(0,400)`));
+      await snap('perfis-card');
+      fs.writeFileSync(path.join(dir, 'errors.txt'), errs.join('\n'));
+      return app.quit();
+    }
     log('fonts -> ' + await wc.executeJavaScript(`document.fonts.ready.then(() => 'Inter=' + document.fonts.check('600 15px Inter') + ' Mono=' + document.fonts.check('12px "Source Code Pro"') + ' carregadas=' + [...document.fonts].filter(f => f.status === 'loaded').map(f => f.family).join(','))`));
     for (const t of ['geral', 'agentes', 'modelos', 'ext', 'sessoes', 'audit', 'precos']) {
       await step(`document.querySelector('[data-tab=${t}]').click()`, 900);
@@ -437,9 +455,23 @@ ipcMain.handle('profiles:import', async () => {
 let store;
 const pluginKeys = () => getInventory().plugins.map((p) => p.key);
 ipcMain.handle('profiles:get', () => ({ ...store.load(), current: store.current() }));
-ipcMain.handle('profiles:save', (_e, st) => store.saveProfiles(st.profiles, pluginKeys()));
+// perfil com Orchestra marcado: instala o plugin sozinho antes de gravar (aí ele entra ligado no settings)
+const Orch = require('./src/services/orchestra');
+async function ensureOrchestraFor(id, profiles) {
+  const p = (profiles || store.load().profiles).find((x) => x.id === id);
+  if (!p || !p.orchestra) return null;
+  return Orch.ensureInstalled(app.getPath('userData'), pluginKeys(), (src, name, scope) => I.installPlugin(src, name, scope));
+}
+ipcMain.handle('profiles:save', async (_e, st) => {
+  const active = store.load().active;
+  const orchestra = active ? await ensureOrchestraFor(active, st.profiles) : null;
+  return { ...store.saveProfiles(st.profiles, pluginKeys()), orchestra };
+});
 ipcMain.handle('profiles:plan', (_e, p) => store.plan(p, pluginKeys()));
-ipcMain.handle('profiles:apply', (_e, id) => store.apply(id, pluginKeys()));
+ipcMain.handle('profiles:apply', async (_e, id) => {
+  const orchestra = await ensureOrchestraFor(id);
+  return { ...store.apply(id, pluginKeys()), orchestra };
+});
 ipcMain.handle('profiles:detach', () => store.detach());
 // "a próxima sessão vai abrir com o perfil?" — deep=true abre uma sessão real (usa o plano)
 const SC = require('./src/services/sessioncheck');

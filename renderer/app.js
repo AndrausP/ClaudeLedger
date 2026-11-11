@@ -709,9 +709,10 @@ function viewPerfis() {
       + '<div class="frow"><label>Nome<input data-pf="name" value="' + esc(p.name) + '"></label>'
       + '<label>Modelo padrão<select data-pf="model">' + models.map(([v, l]) => '<option value="' + esc(v) + '"' + (v === (p.model || '') ? ' selected' : '') + '>' + esc(l) + '</option>').join('') + '</select></label></div>'
       + '<h3>Sempre ativo em toda sessão</h3><div class="chks">'
-      + chk('data-pb', 'caveman', p.caveman, 'Caveman (respostas comprimidas)') + chk('data-pb', 'nirvana', p.nirvana, 'Nirvana (protocolo do broker + cadeia de 9 agentes)') + '</div>'
+      + chk('data-pb', 'caveman', p.caveman, 'Caveman (respostas comprimidas)') + chk('data-pb', 'nirvana', p.nirvana, 'Nirvana (protocolo do broker + cadeia de 9 agentes)')
+      + chk('data-pb', 'orchestra', p.orchestra, 'Orchestra Core (instala o plugin sozinho e mostra a aba Orchestra)') + '</div>'
       + ((p.requires || []).length ? '<h3>Plugins que este perfil usa</h3><div class="chks">' + p.requires.map((q) => { const have = inv.plugins.some((x) => x.key === q.id); return have ? tag('ok', q.id) : (q.source ? '<button class="btn" data-req="' + esc(q.source + '|' + q.id) + '">Instalar ' + esc(q.id) + '</button>' : tag('warn', q.id + ' (sem origem)')); }).join(' ') + '</div>' : '')
-      + '<h3>Plugins</h3><div class="chks">' + inv.plugins.map((x) => chk('data-pl', x.key, !(p.disabledPlugins || []).includes(x.key), x.id)).join('') + '</div>'
+      + '<h3>Plugins</h3><div class="chks">' + inv.plugins.filter((x) => x.key.split('@')[0] !== 'orchestra').map((x) => chk('data-pl', x.key, !(p.disabledPlugins || []).includes(x.key), x.id)).join('') + '</div>'
       + '<h3>MCP servers liberados</h3><div class="chks">' + inv.mcps.map((x) => chk('data-mcp', x.id, !(p.blockedMcp || []).includes(x.id), x.id)).join('') + '</div>'
       + '<h3>Skills</h3><div class="card" style="padding:0;max-height:300px;overflow:auto"><table><thead><tr><th class="l">Skill</th><th>Liberada</th><th>Rodar no início</th></tr></thead><tbody>' + skillRows + '</tbody></table></div>'
       + '<h3>Instruções extras (vão para o CLAUDE.md global)</h3><textarea data-pf="instructions" rows="5" placeholder="Ex.: sempre responder em português; rodar testes antes de commit…">' + esc(p.instructions || '') + '</textarea>'
@@ -726,8 +727,23 @@ function viewPerfis() {
     + '<div class="note" style="margin-bottom:12px">Perfil ativo: <b>' + (act ? esc(act.name) : 'nenhum') + '</b>' + (P.appliedAt ? ' · aplicado ' + fDate(P.appliedAt) : '') + (act ? ' <button class="btn" id="pdetach">Desvincular</button>' : '') + '</div>'
     + '<div class="pgrid"><div><div class="plist">' + list + '</div><button class="btn" id="pnew" style="width:100%;margin-top:8px">+ Novo perfil (da config atual)</button><button class="btn" id="pimp" style="width:100%;margin-top:6px">Importar arquivo…</button></div><div>' + ed + '</div></div>';
 }
-async function loadProfiles() { S.P = await window.ledger.profiles.get(); if (!S.editId && S.P.profiles.length) S.editId = S.P.active || S.P.profiles[0].id; }
-async function saveProfiles() { const r = await window.ledger.profiles.save({ profiles: S.P.profiles }); S.P = { ...S.P, ...r }; if (r.synced && S.PC) S.PC.res = null; return r; }
+async function loadProfiles() { S.P = await window.ledger.profiles.get(); if (!S.editId && S.P.profiles.length) S.editId = S.P.active || S.P.profiles[0].id; renderTabs(); }
+
+// perfil ativo: aparece no canto inferior esquerdo e decide se a aba Orchestra existe
+const activeProfile = () => (S.P && S.P.profiles.find((x) => x.id === S.P.active)) || null;
+const tabVisible = (k) => k !== 'orchestra' || !!(activeProfile() && activeProfile().orchestra);
+function renderTabs() {
+  const vis = TABS.filter((t) => tabVisible(t[0]));
+  $('#tabs').innerHTML = vis.map(([k, l, i, , g], idx) => (idx === 0 || vis[idx - 1][4] !== g ? `<div class="navsec">${g}</div>` : '') + `<button data-tab="${k}">${ico(i)}<span>${l}</span></button>`).join('');
+  if (!tabVisible(S.tab)) S.tab = 'geral';
+  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === S.tab));
+  const a = activeProfile(), el = $('#profbadge');
+  if (el) el.innerHTML = '<button data-tab="perfis" title="Abrir Perfis">' + ico('user') + '<span><small>Perfil ativo</small><b>' + esc(a ? a.name : 'nenhum') + '</b></span>'
+    + (a && a.orchestra ? '<em>Orchestra</em>' : '') + '</button>';
+}
+async function saveProfiles() { const r = await window.ledger.profiles.save({ profiles: S.P.profiles }); S.P = { ...S.P, ...r }; if (r.synced && S.PC) S.PC.res = null; if (r.orchestra && !r.orchestra.already) await refreshAfterInstall(); renderTabs(); return r; }
+// resultado da instalação automática do Orchestra, para as mensagens de salvar/aplicar
+const orchMsg = (o) => (!o ? '' : o.already ? '' : o.ok ? ' Orchestra Core instalado.' : ' Não consegui instalar o Orchestra Core: ' + String(o.out || '').split('\n').filter(Boolean).slice(-1)[0]);
 const toggle = (arr, id, off) => { const s = new Set(arr || []); if (off) s.add(id); else s.delete(id); return [...s]; };
 
 // ---------- explorar ----------
@@ -1003,7 +1019,8 @@ document.addEventListener('mouseleave', () => { tipEl.classList.remove('on'); ti
 $('#view').addEventListener('scroll', () => { tipEl.classList.remove('on'); tipFor = null; });
 
 // ---------- eventos ----------
-$('#tabs').innerHTML = TABS.map(([k, l, i, , g], idx) => (idx === 0 || TABS[idx - 1][4] !== g ? `<div class="navsec">${g}</div>` : '') + `<button data-tab="${k}">${ico(i)}<span>${l}</span></button>`).join('');
+renderTabs();
+$('#profbadge').onclick = (e) => { if (e.target.closest('[data-tab]')) { S.tab = 'perfis'; render(); } };
 $('#tabs').onclick = (e) => { const b = e.target.closest('[data-tab]'); if (b) { if (S.tab === 'sessoes' && b.dataset.tab === 'sessoes' && S.V) { S.V.sid = null; S.V.sel = null; }
     if (S.tab === 'agentes' && b.dataset.tab === 'agentes' && S.A) S.A = { name: null, sub: 'resumo' };
     if (S.tab === 'orchestra' && b.dataset.tab === 'orchestra' && S.O) S.O.agent = null; S.tab = b.dataset.tab; render(); if (S.tab === 'explore') loadExplore(); } };
@@ -1089,10 +1106,10 @@ $('#view').addEventListener('click', async (e) => {
   if (id === 'pnew') { const n = profileFromCurrent('Perfil ' + (S.P.profiles.length + 1)); S.P.profiles.push(n); S.editId = n.id; S.plan = null; await saveProfiles(); render(); }
   else if (id === 'pdup' && p) { const n = { ...JSON.parse(JSON.stringify(p)), id: uid(), name: p.name + ' (cópia)' }; S.P.profiles.push(n); S.editId = n.id; await saveProfiles(); render(); }
   else if (id === 'pdel' && p) { if (p.id === S.P.active) { S.pmsg = 'Desvincule o perfil ativo antes de excluir.'; render(); return; } S.P.profiles = S.P.profiles.filter((x) => x !== p); S.editId = S.P.profiles[0] && S.P.profiles[0].id; await saveProfiles(); render(); }
-  else if (id === 'psave') { try { const r = await saveProfiles(); S.pmsg = r.synced ? (r.changed ? 'Salvo e aplicado: a próxima sessão do Claude Code já abre assim.' : 'Salvo. O Claude Code já estava com esta configuração.') : 'Salvo. Este perfil não está ativo: use “Aplicar ao Claude Code…” para valer nas sessões.'; } catch (err) { S.pmsg = 'Erro: ' + err.message; } render(); }
+  else if (id === 'psave') { try { const r = await saveProfiles(); S.pmsg = r.synced ? (r.changed ? 'Salvo e aplicado: a próxima sessão do Claude Code já abre assim.' : 'Salvo. O Claude Code já estava com esta configuração.') : 'Salvo. Este perfil não está ativo: use “Aplicar ao Claude Code…” para valer nas sessões.'; S.pmsg += orchMsg(r.orchestra); } catch (err) { S.pmsg = 'Erro: ' + err.message; } render(); }
   else if (id === 'pplan' && p) { await saveProfiles(); S.plan = await window.ledger.profiles.plan(p); S.pmsg = ''; render(); }
   else if (id === 'pcancel') { S.plan = null; render(); }
-  else if (id === 'papply' && p) { try { const r = await window.ledger.profiles.apply(p.id); S.plan = null; await loadProfiles(); S.pmsg = 'Aplicado. Toda sessão nova do Claude Code abre com este perfil' + (r.hook ? ' e confere a configuração ao iniciar' : ' (Node.js não encontrado: sem conferência automática ao iniciar)') + '.' + (r.backup ? ' Backup: ' + r.backup : ''); if (S.PC) S.PC.res = null; } catch (err) { S.pmsg = 'Erro: ' + err.message; } render(); }
+  else if (id === 'papply' && p) { try { const r = await window.ledger.profiles.apply(p.id); S.plan = null; await loadProfiles(); S.pmsg = 'Aplicado. Toda sessão nova do Claude Code abre com este perfil' + (r.hook ? ' e confere a configuração ao iniciar' : ' (Node.js não encontrado: sem conferência automática ao iniciar)') + '.' + orchMsg(r.orchestra) + (r.backup ? ' Backup: ' + r.backup : ''); if (r.orchestra && !r.orchestra.already) await refreshAfterInstall(); if (S.PC) S.PC.res = null; } catch (err) { S.pmsg = 'Erro: ' + err.message; } render(); }
   else if (id === 'pdetach') { const r = await window.ledger.profiles.detach(); await loadProfiles(); S.pmsg = 'Desvinculado. Backup: ' + r.backup; if (S.PC) S.PC.res = null; render(); }
 });
 $('#view').addEventListener('change', (e) => {

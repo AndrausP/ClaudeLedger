@@ -37,6 +37,31 @@ function locate(db, configured) {
   return { root: null, tried };
 }
 
+// ---- instalação automática (perfil com Orchestra marcado) ----
+// O repositório do Orchestra traz só .claude-plugin/plugin.json (sem marketplace). O Ledger gera um
+// marketplace mínimo na própria pasta de dados apontando para o repositório e instala pelo CLI oficial.
+// Nada é gravado no repositório do Orchestra.
+const ORCHESTRA_REPO = process.env.LEDGER_ORCHESTRA_REPO || 'AndrausP/CLAUDESUPREME';
+const MARKETPLACE = 'claude-ledger-orchestra';
+const isOrchestraKey = (k) => String(k).split('@')[0] === 'orchestra';
+
+function writeMarketplace(userData, repo = ORCHESTRA_REPO) {
+  const dir = path.join(userData, 'marketplaces', 'orchestra');
+  fs.mkdirSync(path.join(dir, '.claude-plugin'), { recursive: true });
+  const m = { name: MARKETPLACE, owner: { name: 'Claude Ledger' }, plugins: [{ name: 'orchestra', description: 'Orchestra Core — orquestração local de agentes', source: { source: 'github', repo } }] };
+  fs.writeFileSync(path.join(dir, '.claude-plugin', 'marketplace.json'), JSON.stringify(m, null, 2) + '\n');
+  return dir;
+}
+
+// installPlugin: (source, name, scope) → { ok, out } — injetado para testar sem o CLI real
+async function ensureInstalled(userData, pluginKeys, installPlugin) {
+  const have = pluginKeys.find(isOrchestraKey);
+  if (have) return { ok: true, already: true, key: have };
+  const dir = writeMarketplace(userData);
+  const r = await installPlugin(dir, 'orchestra', 'user');
+  return { ok: !!r.ok, already: false, key: r.ok ? 'orchestra@' + MARKETPLACE : null, out: r.out, cmd: r.cmd };
+}
+
 function catalog(root) {
   const agentsJ = readJson(path.join(root, 'catalogs', 'agents.json')) || {};
   const skillsJ = readJson(path.join(root, 'catalogs', 'skills.json')) || {};
@@ -185,4 +210,4 @@ function overview(db, F = {}, configured) {
   };
 }
 
-module.exports = { locate, catalog, runtimes, usage, overview, aliases, isOrchestraRoot, MODEL_FAMILY };
+module.exports = { locate, catalog, runtimes, usage, overview, aliases, isOrchestraRoot, MODEL_FAMILY, ensureInstalled, writeMarketplace, isOrchestraKey, MARKETPLACE };

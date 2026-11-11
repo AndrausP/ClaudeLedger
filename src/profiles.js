@@ -42,6 +42,12 @@ function hookCommand(s) {
   return null;
 }
 
+// plugin ligado neste perfil? O Orchestra segue a opção própria do perfil, não a lista de plugins.
+function pluginOn(p, key) {
+  if (String(key).split('@')[0] === 'orchestra') return !!p.orchestra;
+  return !(p.disabledPlugins || []).includes(key);
+}
+
 // regras de deny que o perfil produz
 function denyRules(p) {
   return [
@@ -54,6 +60,7 @@ function instructionsBlock(p) {
   const lines = [`# Perfil ativo: ${p.name}`, '', 'Instruções fixas deste perfil — valem para toda sessão, sem precisar ativar no chat.', ''];
   if (p.caveman) lines.push('- Caveman sempre ativo (nível full) em toda resposta. Nunca desativar sem o usuário pedir.');
   if (p.nirvana) lines.push('- Nirvana sempre ativo: toda ideia do usuário segue o Protocolo do Broker e a cadeia dos 9 agentes descrita neste arquivo, sem precisar de comando no chat.');
+  if (p.orchestra) lines.push('- Orchestra Core ativo: o plugin `orchestra` está instalado e ligado neste perfil; use-o para orquestrar agentes quando a tarefa pedir.');
   if ((p.startSkills || []).length) lines.push(`- No início de toda sessão, antes da primeira resposta, invoque estas skills na ordem: ${p.startSkills.map((s) => '`' + s + '`').join(', ')}.`);
   if ((p.blockedSkills || []).length) lines.push(`- Não use estas skills neste perfil: ${p.blockedSkills.join(', ')}.`);
   if ((p.blockedMcp || []).length) lines.push(`- Não use estes MCP servers neste perfil: ${p.blockedMcp.join(', ')}.`);
@@ -97,7 +104,7 @@ function createStore(userData) {
     const changes = [];
     if ((p.model || '') !== (s.model || '')) changes.push(`model: ${s.model || '(padrão)'} → ${p.model || '(padrão)'}`);
     for (const k of pluginKeys) {
-      const want = !(p.disabledPlugins || []).includes(k);
+      const want = pluginOn(p, k);
       const has = cur.enabledPlugins[k] !== false;
       if (want !== has) changes.push(`plugin ${k}: ${has ? 'ativo' : 'desativado'} → ${want ? 'ativo' : 'desativado'}`);
     }
@@ -133,7 +140,7 @@ function createStore(userData) {
     let s = JSON.parse(JSON.stringify(before)); // preserva todas as outras chaves
     if (p.model) s.model = p.model; else delete s.model;
     s.enabledPlugins = s.enabledPlugins || {};
-    for (const k of pluginKeys) s.enabledPlugins[k] = !(p.disabledPlugins || []).includes(k);
+    for (const k of pluginKeys) s.enabledPlugins[k] = pluginOn(p, k);
     s.permissions = s.permissions || {};
     if (denyNext.length) s.permissions.deny = denyNext; else delete s.permissions.deny;
     if (!Object.keys(s.permissions).length) delete s.permissions;
@@ -155,7 +162,7 @@ function createStore(userData) {
 
     // alvo que o hook confere a cada sessão aberta
     const plugins = {};
-    for (const k of pluginKeys) plugins[k] = !(p.disabledPlugins || []).includes(k);
+    for (const k of pluginKeys) plugins[k] = pluginOn(p, k);
     st.target = { name: p.name, model: p.model || '', plugins, deny: denyRules(p), block };
     if (st.active !== id || changed || !st.appliedAt) st.appliedAt = Date.now();
     st.active = id;
@@ -220,7 +227,7 @@ function createStore(userData) {
     s.enabledPlugins = s.enabledPlugins || {};
     const markets = new Set();
     for (const k of pluginKeys) {
-      const on = !(p.disabledPlugins || []).includes(k);
+      const on = pluginOn(p, k);
       s.enabledPlugins[k] = on;
       if (on) markets.add(k.split('@')[1]);
     }
