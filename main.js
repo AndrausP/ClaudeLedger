@@ -49,6 +49,7 @@ function createWindow() {
   win = new BrowserWindow({
     width: 1480, height: 920, minWidth: 1100, minHeight: 640,
     title: 'Claude Ledger', backgroundColor: '#000000', autoHideMenuBar: true,
+    icon: path.join(__dirname, 'renderer', 'logo.png'), // ícone da janela/barra de tarefas (o .exe usa build/icon.png)
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));

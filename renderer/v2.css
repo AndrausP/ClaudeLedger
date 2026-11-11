@@ -32,3 +32,4 @@ button.btn.sm svg { width: 13px; height: 13px; }
 /* ====== GitHub ====== */
 .ghbar { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
 .ghinfo { margin: 0 0 10px; }
+.brand img { flex: none; display: block; image-rendering: auto; }
