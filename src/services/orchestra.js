@@ -25,7 +25,7 @@ const isOrchestraRoot = (dir) => { const p = readJson(path.join(dir, '.claude-pl
 function locate(db, configured) {
   const tried = [];
   if (configured) { tried.push(configured); if (isOrchestraRoot(configured)) return { root: configured, via: 'configurado' }; }
-  const inst = readJson(path.join(os.homedir(), '.claude', 'plugins', 'installed_plugins.json'));
+  const inst = readJson(path.join(process.env.LEDGER_CLAUDE_DIR || path.join(os.homedir(), '.claude'), 'plugins', 'installed_plugins.json'));
   for (const [key, list] of Object.entries((inst && inst.plugins) || {})) {
     if (!key.startsWith('orchestra@')) continue;
     const ip = (Array.isArray(list) ? list[0] : list || {}).installPath;

@@ -4,7 +4,10 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { DatabaseSync } = require('node:sqlite');
+// isola do Claude Code real: um Orchestra instalada na máquina não pode interferir no teste
+process.env.LEDGER_CLAUDE_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'ledger-orc-claude-'));
 const H = require('./helpers');
 const { ingestAll } = require('../src/ingest/transcripts');
 const O = require('../src/services/orchestra');
