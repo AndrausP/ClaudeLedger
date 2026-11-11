@@ -1,0 +1,53 @@
+﻿<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; font-src 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Ledger</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="v1.css">
+<link rel="stylesheet" href="v2.css">
+<link rel="stylesheet" href="diag.css">
+</head>
+<body>
+<aside>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 17a3 3 0 0 0 2.6 4.5h10.8A3 3 0 0 0 20 17L12 3Z"/><path d="M8.5 21.5 12 15l3.5 6.5"/></svg>
+    <span>Claude Ledger</span>
+  </div>
+  <nav id="tabs"></nav>
+  <div class="aside-foot">
+    <div class="live"><i></i><span id="livemsg">Coleta ativa</span></div>
+  </div>
+</aside>
+<div class="shell">
+  <header>
+    <div class="title"><h1 id="ptitle">Visão Geral</h1><p id="psub"></p></div>
+    <div class="filters">
+      <!-- selects ocultos: mantidos para compatibilidade; a barra de filtros (#fmod) é a interface -->
+      <select id="project" aria-hidden="true" tabindex="-1"><option value="">Todos os projetos</option></select>
+      <select id="period" aria-hidden="true" tabindex="-1">
+        <option value="1">Hoje</option>
+        <option value="7">Últimos 7 dias</option>
+        <option value="30" selected>Últimos 30 dias</option>
+        <option value="90">Últimos 90 dias</option>
+        <option value="0">Todo o histórico</option>
+      </select>
+      <select id="fmodel" aria-hidden="true" tabindex="-1"><option value="">Todos os modelos</option></select>
+      <select id="fagent" aria-hidden="true" tabindex="-1"><option value="">Todos os agentes</option></select>
+      <button id="reload" title="Reler transcritos" aria-label="Atualizar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
+    </div>
+  </header>
+  <div id="fmod" class="fmod"></div>
+  <main id="view"></main>
+</div>
+<div id="loading"><div><b id="loadmsg">Lendo transcritos…</b><div class="bar"><i id="loadbar"></i></div></div></div>
+<script src="app.js"></script>
+<script src="filters.js"></script>
+<script src="v1.js"></script>
+<script src="v2.js"></script>
+<script src="diag.js"></script>
+<script src="help.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "caveman",
+  "description": "Modo de resposta comprimida: corta texto de enchimento e mantém termos técnicos, código e erros exatos.",
+  "repo": "https://github.com/JuliusBrussee/caveman",
+  "tags": ["tokens", "produtividade"]
+}

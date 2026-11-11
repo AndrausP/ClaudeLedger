@@ -1,0 +1,40 @@
+name: registry
+
+on:
+  pull_request:
+    paths: ['entries/**', 'scripts/**']
+  push:
+    branches: [main]
+    paths: ['entries/**', 'scripts/**']
+  schedule:
+    - cron: '0 6 * * 1' # toda segunda: revalida tudo (repos apagados, commits sumidos)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node scripts/build.mjs --check
+
+  publish:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node scripts/build.mjs
+      - name: Commit index.json
+        run: |
+          git config user.name "registry-bot"
+          git config user.email "registry-bot@users.noreply.github.com"
+          git add index.json
+          git diff --cached --quiet || git commit -m "chore: rebuild index.json"
+          git push

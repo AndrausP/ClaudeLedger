@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "generatedAt": "2026-11-11T13:30:16.268Z",
+  "entries": [
+    {
+      "name": "caveman",
+      "description": "Modo de resposta comprimida: corta texto de enchimento e mantém termos técnicos, código e erros exatos.",
+      "repo": "https://github.com/JuliusBrussee/caveman",
+      "commit": "3dc497a7f858c774d6e15b25e8c6120ef3a0eda8",
+      "kind": "marketplace",
+      "hooks": true,
+      "hookEvents": [
+        "SessionStart",
+        "SubagentStart",
+        "UserPromptSubmit",
+        "SessionEnd"
+      ],
+      "mcp": [],
+      "skills": 28,
+      "agents": 6,
+      "tags": [
+        "tokens",
+        "produtividade"
+      ],
+      "author": null
+    }
+  ]
+}

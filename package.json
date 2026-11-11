@@ -1,0 +1,73 @@
+{
+  "name": "claude-ledger",
+  "productName": "Claude Ledger",
+  "version": "0.3.0",
+  "description": "Custo de tokens do Claude Code por agente, modelo e extensão; perfis de configuração; instalação de plugins, skills e MCP por link.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win nsis --x64",
+    "dist:mac": "electron-builder --mac dmg",
+    "dist:linux": "electron-builder --linux AppImage",
+    "test": "node --test --test-reporter=spec test/*.test.js"
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@fontsource-variable/inter": "^5.2.5",
+    "@fontsource-variable/source-code-pro": "^5.2.5",
+    "electron": "45.3.0",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "app.claudeledger.desktop",
+    "productName": "Claude Ledger",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "renderer/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Claude Ledger"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.developer-tools",
+      "icon": "build/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Development",
+      "icon": "build/icon.png"
+    },
+    "asarUnpack": [
+      "src/**"
+    ]
+  }
+}

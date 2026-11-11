@@ -1,0 +1,9 @@
+{
+  "name": "nome-da-extensao",
+  "description": "O que ela faz, em uma frase (10 a 300 caracteres).",
+  "repo": "https://github.com/dono/repositorio",
+  "commit": "",
+  "kind": "",
+  "tags": ["exemplo"],
+  "author": "seu-usuario-github"
+}
