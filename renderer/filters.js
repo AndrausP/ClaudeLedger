@@ -7,6 +7,7 @@
 S.cFrom = S.cFrom || ''; // personalizado: 'AAAA-MM-DD'
 S.cTo = S.cTo || '';
 S.q = S.q || '';
+S.exclude = S.exclude || []; // projetos tirados de TODAS as telas e relatórios
 S.FO = null; // opções vindas do banco
 
 const minuteNow = () => Math.floor(Date.now() / 60000) * 60000; // estável entre renders (chave de cache)
@@ -19,14 +20,15 @@ function FX() {
     from = S.cFrom ? new Date(S.cFrom + 'T00:00:00').getTime() : undefined;
     to = S.cTo ? new Date(S.cTo + 'T23:59:59.999').getTime() : undefined;
   } else if (S.period) from = minuteNow() - S.period * 864e5;
-  return { from, to, project: S.project || undefined, agent: S.agent || undefined, model: S.model || undefined };
+  return { from, to, project: S.project || undefined, agent: S.agent || undefined, model: S.model || undefined, exclude: S.exclude.length ? [...S.exclude].sort() : undefined };
 }
 
 // --- substituem as versões do app.js (telas que leem do parser) para usar o MESMO filtro
 function filtered() {
   const f = FX();
+  const ex = new Set(f.exclude || []);
   return S.D.records.filter((r) => (f.from == null || r.t >= f.from) && (f.to == null || r.t <= f.to)
-    && (!f.project || r.p === f.project) && (!f.model || r.m === f.model) && (!f.agent || r.a === f.agent));
+    && (!f.project || r.p === f.project) && !ex.has(r.p) && (!f.model || r.m === f.model) && (!f.agent || r.a === f.agent));
 }
 // período anterior de mesmo tamanho (variação dos cards)
 function previous() {
@@ -35,7 +37,8 @@ function previous() {
   const end = f.to != null ? f.to : Date.now(), len = end - f.from;
   const from = f.from - len, to = f.from;
   if (Math.min(...S.D.records.map((r) => r.t)) > from) return null; // histórico não cobre a janela anterior
-  return S.D.records.filter((r) => r.t >= from && r.t < to && (!f.project || r.p === f.project) && (!f.model || r.m === f.model) && (!f.agent || r.a === f.agent));
+  const ex = new Set(f.exclude || []);
+  return S.D.records.filter((r) => r.t >= from && r.t < to && (!f.project || r.p === f.project) && !ex.has(r.p) && (!f.model || r.m === f.model) && (!f.agent || r.a === f.agent));
 }
 
 // --- URL
@@ -44,6 +47,7 @@ function saveHash() {
   if (S.period !== 30) q.set('dias', S.period);
   if (custom()) { if (S.cFrom) q.set('de', S.cFrom); if (S.cTo) q.set('ate', S.cTo); }
   if (S.project) q.set('projeto', S.project);
+  if (S.exclude.length) q.set('sem', S.exclude.join(','));
   if (S.model) q.set('modelo', S.model);
   if (S.agent) q.set('agente', S.agent);
   if (S.q) q.set('busca', S.q);
@@ -62,7 +66,8 @@ function readHash() {
   if (TABS.some((t) => t[0] === tab)) S.tab = tab;
   if (q.has('dias')) S.period = +q.get('dias');
   S.cFrom = q.get('de') || ''; S.cTo = q.get('ate') || '';
-  S.project = q.get('projeto') || ''; S.model = q.get('modelo') || ''; S.agent = q.get('agente') || ''; S.q = q.get('busca') || '';
+  S.project = q.get('projeto') || '';
+  S.exclude = (q.get('sem') || '').split(',').filter(Boolean); S.model = q.get('modelo') || ''; S.agent = q.get('agente') || ''; S.q = q.get('busca') || '';
   if (q.has('sessao') && S.V) { S.V.sid = q.get('sessao'); S.V.stab = q.get('aba') || 'timeline'; }
   if (q.has('detalhe') && S.A) S.A.name = q.get('detalhe');
   if (q.has('sub') && S.AU) S.AU.sub = q.get('sub');
@@ -79,6 +84,7 @@ function chipList() {
   if (custom()) out.push(['periodo', 'Período', (S.cFrom ? S.cFrom.split('-').reverse().join('/') : '…') + ' → ' + (S.cTo ? S.cTo.split('-').reverse().join('/') : 'hoje')]);
   else if (S.period !== 30) out.push(['periodo', 'Período', (PERIODS.find((p) => p[0] === S.period) || [0, ''])[1]]);
   if (S.project) out.push(['project', 'Projeto', (o.projects.find((p) => p.id === S.project) || { name: S.project }).name]);
+  if (S.exclude.length) out.push(['exclude', 'Sem', S.exclude.map((id) => (o.projects.find((p) => p.id === id) || { name: id }).name).join(', ')]);
   if (S.agent) out.push(['agent', 'Agente', S.agent]);
   if (S.model) out.push(['model', 'Modelo', S.model]);
   if (S.q) out.push(['q', 'Busca', '“' + S.q + '”']);
@@ -99,6 +105,10 @@ function renderFilterBar() {
     + '<label class="fctl">' + ico('calendar') + '<select data-f="period" aria-label="Período">' + PERIODS.map(([v, l]) => opt(v, l, isCustom ? 'c' : S.period)).join('') + '</select></label>'
     + (isCustom ? '<span class="fdates"><input type="date" data-f="cFrom" value="' + esc(S.cFrom) + '" aria-label="De"><span>→</span><input type="date" data-f="cTo" value="' + esc(S.cTo) + '" aria-label="Até"></span>' : '')
     + '<label class="fctl">' + ico('folder') + '<select data-f="project" aria-label="Projeto">' + opt('', 'Todos os projetos', S.project) + o.projects.map((p) => opt(p.id, p.name + ' (' + p.sessions + ')', S.project)).join('') + '</select></label>'
+    + '<span class="fexwrap"><button class="fctl fexbtn' + (S.exclude.length ? ' on' : '') + '" data-fexopen aria-expanded="' + !!S.fexOpen + '">' + ico('x') + 'Excluir projetos' + (S.exclude.length ? ' <b>' + S.exclude.length + '</b>' : '') + '</button>'
+    + (S.fexOpen ? '<div class="fexpanel" role="dialog" aria-label="Excluir projetos"><div class="fexh"><b>Tirar dos dados e relatórios</b><button class="linkbtn" data-fexall="0">Nenhum</button></div>'
+      + o.projects.map((p) => '<label class="fexopt"><input type="checkbox" data-fex="' + esc(p.id) + '"' + (S.exclude.includes(p.id) ? ' checked' : '') + (S.project === p.id ? ' disabled' : '') + '><span>' + esc(p.name) + '</span><em>' + p.sessions + '</em></label>').join('')
+      + '</div>' : '') + '</span>'
     + '<label class="fctl">' + ico('bot') + '<select data-f="agent" aria-label="Agente">' + opt('', 'Todos os agentes', S.agent) + o.agents.map((a) => opt(a.name, (a.kind === 'subagent' ? '↳ ' : '') + a.name, S.agent)).join('') + '</select></label>'
     + '<label class="fctl">' + ico('layers') + '<select data-f="model" aria-label="Modelo">' + opt('', 'Todos os modelos', S.model) + o.models.map((m) => opt(m.model, m.model, S.model)).join('') + '</select></label>'
     + '<label class="fctl fsearch">' + ico('search') + '<input data-f="q" placeholder="Buscar nas tabelas…" value="' + esc(S.q) + '" spellcheck="false" aria-label="Busca"></label>'
@@ -145,9 +155,26 @@ document.getElementById('fmod').addEventListener('click', (e) => {
   if (!b) return;
   const k = b.dataset.fclear;
   if (k === '*' || k === 'periodo') { S.period = 30; S.cFrom = ''; S.cTo = ''; S.fcOpen = false; }
-  if (k === '*') { S.project = ''; S.agent = ''; S.model = ''; S.q = ''; }
-  else if (k !== 'periodo') S[k] = '';
+  if (k === '*') { S.project = ''; S.agent = ''; S.model = ''; S.q = ''; S.exclude = []; }
+  else if (k === 'exclude') S.exclude = [];
+  else if (k !== 'periodo' && k !== 'exclude') S[k] = '';
   applyFilterChange();
 });
 window.ledger.onDbUpdated(() => loadFilterOptions());
 loadFilterOptions();
+
+// --- seletor "Excluir projetos"
+document.getElementById('fmod').addEventListener('click', (e) => {
+  if (e.target.closest('[data-fexopen]')) { S.fexOpen = !S.fexOpen; renderFilterBar(); return; }
+  const all = e.target.closest('[data-fexall]');
+  if (all) { S.exclude = []; applyFilterChange(); }
+});
+document.getElementById('fmod').addEventListener('change', (e) => {
+  const id = e.target.dataset.fex;
+  if (id == null) return;
+  S.exclude = e.target.checked ? [...new Set([...S.exclude, id])] : S.exclude.filter((x) => x !== id);
+  applyFilterChange();
+});
+document.addEventListener('mousedown', (e) => {
+  if (S.fexOpen && !e.target.closest('.fexwrap')) { S.fexOpen = false; renderFilterBar(); }
+});

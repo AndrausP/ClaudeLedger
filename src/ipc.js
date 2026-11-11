@@ -16,6 +16,8 @@ const SL = require('./statusline');
 const Otel = require('./otel/receiver');
 const An = require('./services/analytics');
 const GH = require('./github');
+const Orc = require('./services/orchestra');
+const fs = require('fs');
 
 function findNode() {
   try {
@@ -128,6 +130,40 @@ function register({ ipcMain, app, getWin, readPricing }) {
   // ---- busca no GitHub (wrapper: gh autenticado ou API pública)
   h('github:search', (o) => GH.search(o || {}));
   h('github:backend', () => GH.backend());
+  // ---- extensão Orchestra Core (só leitura do catálogo e do runtime dela)
+  const cfgFile = path.join(userData, 'config.json');
+  const readCfg = () => { try { return JSON.parse(fs.readFileSync(cfgFile, 'utf8')); } catch { return {}; } };
+  h('orchestra:overview', (f) => Orc.overview(db, f || {}, readCfg().orchestraPath));
+  h('orchestra:agent', (id, f) => {
+    const o = Orc.overview(db, f || {}, readCfg().orchestraPath);
+    if (!o.found) throw new Error('Extensão Orchestra não encontrada.');
+    const cat = o.catalog.agents.find((x) => x.id === id);
+    if (!cat) throw new Error('Agente fora do catálogo.');
+    // o detalhe de uso reaproveita o mesmo serviço de Agentes, com o nome que aparece no Claude Code
+    const used = Orc.aliases(id).find((n) => db.prepare('SELECT 1 FROM agents WHERE name = ? LIMIT 1').get(n));
+    return { catalog: cat, usage: o.usage.agents[id] || null, alias: used || null, detail: used ? An.agentDetail(db, used, f || {}) : null, department: o.catalog.departments.find((d) => d.id === cat.department) || null };
+  });
+  h('orchestra:setPath', (p) => {
+    const v = String(p || '').trim();
+    if (v && !Orc.isOrchestraRoot(v)) throw new Error('A pasta não contém .claude-plugin/plugin.json com name "orchestra" e catalogs/agents.json.');
+    const c = readCfg(); c.orchestraPath = v || undefined; fs.writeFileSync(cfgFile, JSON.stringify(c, null, 2));
+    return { ok: true };
+  });
+  h('orchestra:saveReport', async ({ format, content, name }) => {
+    const { dialog, BrowserWindow } = require('electron');
+    const ext = { md: 'md', html: 'html', pdf: 'pdf' }[format];
+    if (!ext) throw new Error('formato inválido');
+    const r = await dialog.showSaveDialog(getWin(), { defaultPath: String(name || 'relatorio-orchestra').replace(/[^\w.-]+/g, '-') + '.' + ext, filters: [{ name: ext.toUpperCase(), extensions: [ext] }] });
+    if (r.canceled || !r.filePath) return { ok: false };
+    if (ext !== 'pdf') { fs.writeFileSync(r.filePath, String(content)); return { ok: true, path: r.filePath }; }
+    // PDF: renderiza o HTML do relatório numa janela oculta, sem scripts nem acesso a nada
+    const w = new BrowserWindow({ show: false, webPreferences: { javascript: false, sandbox: true } });
+    try {
+      await w.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(String(content)));
+      fs.writeFileSync(r.filePath, await w.webContents.printToPDF({ printBackground: true, pageSize: 'A4', margins: { marginType: 'default' } }));
+    } finally { w.destroy(); }
+    return { ok: true, path: r.filePath };
+  });
   // abre só páginas do GitHub no navegador padrão
   h('app:openExternal', (url) => { const u = new URL(String(url)); if (u.protocol !== 'https:' || u.hostname !== 'github.com') throw new Error('URL não permitida'); return require('electron').shell.openExternal(u.toString()); });
   // ---- configurações / privacidade

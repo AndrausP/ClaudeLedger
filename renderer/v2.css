@@ -33,3 +33,18 @@ button.btn.sm svg { width: 13px; height: 13px; }
 .ghbar { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
 .ghinfo { margin: 0 0 10px; }
 .brand img { flex: none; display: block; image-rendering: auto; }
+
+/* ====== filtro "Excluir projetos" ====== */
+.fexwrap { position: relative; display: inline-flex; }
+button.fexbtn { color: var(--text); font: inherit; font-size: 13.5px; padding: 8px 12px; cursor: pointer; }
+button.fexbtn b { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 2px; border-radius: 999px; background: var(--bad); color: #160303; font-size: 11px; }
+button.fexbtn.on { border-color: rgba(242, 104, 95, .55); }
+.fexpanel { position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; width: 300px; max-height: 360px; overflow: auto; padding: 8px;
+  background: #0d0d0d; border: 1px solid #2c2c2c; border-radius: 12px; box-shadow: 0 16px 40px rgba(0, 0, 0, .75); }
+.fexh { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 8px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+.fexh b { font-size: 12.5px; font-weight: 600; }
+.fexopt { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 6px; cursor: pointer; font-size: 13.5px; }
+.fexopt:hover { background: #161616; }
+.fexopt span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fexopt em { font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--mute); }
+.fexopt input:checked + span { color: var(--bad); text-decoration: line-through; }

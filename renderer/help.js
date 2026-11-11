@@ -16,7 +16,7 @@ const HELP = {
         'Limites da sessão: quanto da janela de 5 horas e de 7 dias da sua assinatura já foi usado, com o horário de reinício. Só aparece com o coletor da status line ativo (Configurações); nada é estimado.',
       ]],
       ['Filtros', [
-        'A barra abaixo do título (período, inclusive personalizado; projeto; agente; modelo; busca) vale para todas as telas. Os filtros ativos aparecem como etiquetas removíveis e ficam no link da página.',
+        'A barra abaixo do título (período, inclusive personalizado; projeto; excluir projetos; agente; modelo; busca) vale para todas as telas e relatórios. Os filtros ativos aparecem como etiquetas removíveis e ficam no link da página.',
       ]],
       ['Gráficos', [
         'Custo ao longo do tempo: alterne Custo / Tokens / Sessões. Passe o mouse num ponto para ver o detalhe do dia (custo, tokens, modelo principal, agente mais caro).',
@@ -262,6 +262,27 @@ const HELP = {
         'Já instalado: mostra o custo da versão atual × nova e o botão Atualizar.',
         'Mudou desde sua análise: hooks ou MCP que entraram ou saíram desde a última vez.',
         '“Instalados pelo Ledger” permite remover com um clique.',
+      ]],
+    ],
+  },
+  orchestra: {
+    intro: 'Gestão da extensão Orchestra Core: o catálogo dela (departamentos, agentes, skills), o uso real no Claude Code, o runtime de cada projeto e um relatório exportável.',
+    sections: [
+      ['Visão geral', [
+        'Organização: os departamentos lado a lado; cada agente é um bloco. Coroa = líder do departamento. Cor = acurácia das ferramentas; intensidade = número de execuções. Clique para o detalhe.',
+        'Acima do orçamento: execuções em que o agente usou mais turnos que o max_turns definido no catálogo.',
+        'Fora da lista: chamadas de ferramentas que o catálogo não dá ao agente (ex.: um agente só de leitura que usou Write).',
+        'Runtime: tarefas, eventos e memórias que a CLI do Orchestra gravou em .orchestra/ de cada projeto — o app só lê.',
+      ]],
+      ['Agentes', [
+        'Os 36 agentes do catálogo com o uso real. Aderência ao modelo = respostas no modelo previsto (ou alternativa prevista) ÷ total.',
+        'No detalhe: mandato, limites e quando não chamar (catálogo), ferramentas permitidas × usadas, modelos realmente usados, orçamento e o uso detalhado.',
+        'Um agente aparece no Claude Code como orchestra:<id> ou <id>; enquanto não for chamado, mostra “nunca usado”.',
+      ]],
+      ['Relatório', [
+        'Resumo, departamentos, agentes usados e não usados, conformidade e recomendações, sempre com os filtros atuais.',
+        'Use “Excluir projetos” na barra de filtros para tirar projetos do relatório.',
+        'Exporte em Markdown, HTML ou PDF (tema claro, pronto para imprimir).',
       ]],
     ],
   },

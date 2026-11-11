@@ -70,7 +70,10 @@ test('critério 11: mesmo filtro → mesmo custo em Custos, Auditoria e Agentes'
 });
 
 test('filtro: valores vazios são ignorados e números normalizados', () => {
-  assert.deepEqual(norm({ from: '', to: '10', project: '', agent: undefined }), { from: null, to: 10, project: null, agent: null, model: null });
+  assert.deepEqual(norm({ from: '', to: '10', project: '', agent: undefined }), { from: null, to: 10, project: null, agent: null, model: null, exclude: null });
+  assert.deepEqual(norm({ exclude: ['a', 'a', '', 'b'] }).exclude, ['a', 'b'], 'exclusão sem repetidos nem vazios');
+  const ex = reqWhere({ exclude: ['p1', 'p2'] });
+  assert.match(ex.sql, /s\.project_id NOT IN \(\?,\?\)/); assert.deepEqual(ex.args, ['p1', 'p2']);
   assert.equal(reqWhere({}).sql, '1=1');
   const w = reqWhere({ from: 5, agent: 'main' });
   assert.match(w.sql, /m\.started_at >= \?/); assert.deepEqual(w.args, [5, 'main']);

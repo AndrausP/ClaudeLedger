@@ -1,4 +1,4 @@
-# Claude Ledger
+﻿# Claude Ledger
 
 **Observabilidade, custo e governança para o Claude Code — num app desktop que roda 100% local.**
 
@@ -38,7 +38,8 @@ risco antes de qualquer coisa rodar.
 | **Agentes** | Ranking e detalhe de cada agente/subagente: o que chamou, alvos mais comuns, acurácia das ferramentas, erros, sessões, execuções e diagnósticos ligados |
 | **Auditoria** | Visão geral, por agente, cada resposta, cada chamada de ferramenta e erros agrupados — tudo clicável até o evento |
 | **Extensões** | Inventário instalado × uso real · catálogo oficial, registry de MCP, busca no GitHub e índice da comunidade · instalação por link com análise em quarentena · perfis de configuração aplicados ao Claude Code |
-| **Filtros** | Barra única (período, inclusive personalizado; projeto; agente; modelo; busca) que vale para todas as telas e fica na URL |
+| **Orchestra Core** | Aba dedicada à extensão Orchestra: organograma dos departamentos, uso real de cada agente, aderência ao catálogo (modelo previsto × usado, turnos × orçamento, ferramentas fora da lista), tarefas e eventos do runtime (só leitura) e relatório exportável em Markdown, HTML e PDF |
+| **Filtros** | Barra única (período, inclusive personalizado; projeto; excluir projetos; agente; modelo; busca) que vale para todas as telas e relatórios e fica na URL |
 
 Cada tela tem um botão **?** ao lado do título que explica como lê-la.
 
@@ -104,6 +105,7 @@ Testado no Windows 11. Os caminhos usados (`~/.claude`) são os mesmos no macOS 
 **Extensões**
 
 - **Extensões** — o que está instalado e o que realmente é usado; “nunca usado” é candidato a remover.
+- **Orchestra** — gestão da extensão Orchestra Core: catálogo × uso × runtime, detalhe de cada agente e relatório.
 - **Explorar e instalar** — diretório oficial, GitHub, registry de MCP, comunidade e instalação por link. Todo repositório é clonado em quarentena e analisado (hooks, comandos de MCP, scripts, custo fixo em tokens) antes de instalar.
 
 **Configuração**
@@ -149,7 +151,7 @@ Sem dependências de runtime além do Electron: `node:sqlite`, `node:http` e `no
 
 ```bash
 npm start            # app em modo desenvolvimento
-npm test             # 34 testes: deduplicação, incremental, privacidade, fórmulas, regras, filtros…
+npm test             # 38 testes: deduplicação, incremental, privacidade, fórmulas, regras, filtros…
 npm run dist:win     # instalador (também dist:mac e dist:linux)
 ```
 
