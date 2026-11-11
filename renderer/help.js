@@ -265,27 +265,6 @@ const HELP = {
       ]],
     ],
   },
-  orchestra: {
-    intro: 'Gestão da extensão Orchestra Core: o catálogo dela (departamentos, agentes, skills), o uso real no Claude Code, o runtime de cada projeto e um relatório exportável.',
-    sections: [
-      ['Visão geral', [
-        'Organização: os departamentos lado a lado; cada agente é um bloco. Coroa = líder do departamento. Cor = acurácia das ferramentas; intensidade = número de execuções. Clique para o detalhe.',
-        'Acima do orçamento: execuções em que o agente usou mais turnos que o max_turns definido no catálogo.',
-        'Fora da lista: chamadas de ferramentas que o catálogo não dá ao agente (ex.: um agente só de leitura que usou Write).',
-        'Runtime: tarefas, eventos e memórias que a CLI do Orchestra gravou em .orchestra/ de cada projeto — o app só lê.',
-      ]],
-      ['Agentes', [
-        'Os 36 agentes do catálogo com o uso real. Aderência ao modelo = respostas no modelo previsto (ou alternativa prevista) ÷ total.',
-        'No detalhe: mandato, limites e quando não chamar (catálogo), ferramentas permitidas × usadas, modelos realmente usados, orçamento e o uso detalhado.',
-        'Um agente aparece no Claude Code como orchestra:<id> ou <id>; enquanto não for chamado, mostra “nunca usado”.',
-      ]],
-      ['Relatório', [
-        'Resumo, departamentos, agentes usados e não usados, conformidade e recomendações, sempre com os filtros atuais.',
-        'Use “Excluir projetos” na barra de filtros para tirar projetos do relatório.',
-        'Exporte em Markdown, HTML ou PDF (tema claro, pronto para imprimir).',
-      ]],
-    ],
-  },
   perfis: {
     intro: 'Configurações que toda sessão nova do Claude Code segue.',
     sections: [

@@ -248,21 +248,6 @@ async function shoot(dir) {
     log('v2 github skills=' + await until(`!document.querySelector('.spin') && document.querySelectorAll('.pbody .xitem').length > 0`, 20000) + ' | 1º=' + await txt('.pbody .xitem .xname'));
     await step(`document.querySelector('[data-pg="x-gh|1"]') && document.querySelector('[data-pg="x-gh|1"]').click()`, 300);
     log('v2 github página 2=' + await until(`document.querySelector('.pager button.on') && document.querySelector('.pager button.on').innerText === '2'`, 20000));
-    // ===== Orchestra + excluir projetos =====
-    await step(`S.O.agent = null; S.O.sub = 'overview'; document.querySelector('[data-tab=orchestra]').click()`, 300);
-    log('orc visão=' + await until(`!!document.querySelector('.orggrid')`, 15000) + ' | ' + await txt('.orchead') + ' | chips=' + await wc.executeJavaScript(`document.querySelectorAll('.orgchip').length`));
-    await snap('orc-overview');
-    await step(`document.querySelector('.orgchip[data-orc-agent="backend-lead"]').click()`, 300);
-    log('orc agente=' + await until(`!!document.querySelector('.orctools')`, 15000) + ' | ' + await txt('.stitle'));
-    await snap('orc-agent');
-    await step(`document.querySelector('[data-orc-back]').click()`, 300);
-    await step(`document.querySelector('[data-orc-sub=agents]').click()`, 500);
-    log('orc agentes=' + await txt('#view .pinfo'));
-    await step(`document.querySelector('[data-orc-sub=tasks]').click()`, 400);
-    log('orc tarefas=' + await txt('#view .state'));
-    await step(`document.querySelector('[data-orc-sub=report]').click()`, 500);
-    log('orc relatório=' + await txt('.orcreport h2') + ' | recomendações=' + await txt('.orcreport ul:last-of-type'));
-    await snap('orc-report');
     // excluir projetos: abre o seletor, marca o 1º projeto e confere a etiqueta + efeito em Sessões
     await step(`S.V.sid = null; document.querySelector('[data-tab=sessoes]').click()`, 400);
     await until(`document.querySelectorAll('tr[data-click^="v-session"]').length > 0`);

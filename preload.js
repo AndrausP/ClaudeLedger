@@ -42,7 +42,7 @@ contextBridge.exposeInMainWorld('ledger', {
       'diagnostics:list', 'diagnostics:recompute', 'diagnostics:feedback', 'efficiency:analyze', 'outcome:set', 'costs:summary', 'costs:reconciliation',
       'subscription:usage', 'changes:commits', 'changes:show', 'changes:files', 'changes:fileDiff', 'tags:set', 'topics:list', 'settings:get', 'settings:set',
       'admin:deleteSession', 'admin:deleteProject', 'admin:restore', 'statusline:install', 'statusline:uninstall', 'otel:set',
-      'filters:options', 'agents:list', 'agents:detail', 'audit:overview', 'audit:responses', 'audit:tools', 'audit:errors', 'github:search', 'github:backend', 'app:openExternal', 'orchestra:overview', 'orchestra:agent', 'orchestra:setPath', 'orchestra:saveReport'];
+      'filters:options', 'agents:list', 'agents:detail', 'audit:overview', 'audit:responses', 'audit:tools', 'audit:errors', 'github:search', 'github:backend', 'app:openExternal'];
     if (!ALLOWED.includes(ch)) return Promise.reject(new Error('canal não permitido: ' + ch));
     return ipcRenderer.invoke(ch, ...args);
   },

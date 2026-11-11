@@ -53,7 +53,6 @@ const TABS = [
   ['audit', 'Auditoria', 'search', 'Resposta a resposta, para conferir os números.', 'Análise'],
   ['ext', 'Extensões', 'puzzle', 'Plugins, skills e MCP: instalado × usado de verdade.', 'Extensões'],
   ['explore', 'Explorar e instalar', 'search', 'Busque no diretório oficial, no GitHub, no registry de MCP e na comunidade — ou cole um link — e instale após análise em quarentena.', 'Extensões'],
-  ['orchestra', 'Orchestra', 'orchestra', 'Gestão da extensão Orchestra Core: agentes, aderência ao catálogo, tarefas e relatório.', 'Extensões'],
   ['perfis', 'Perfis', 'gear', 'Configuração que toda sessão nova do Claude Code segue.', 'Configuração'],
   ['precos', 'Preços', 'sliders', 'Tabela de preços usada nas estimativas (versionada).', 'Configuração'],
   ['config', 'Configurações', 'gear', 'Fontes de dados, coletores opcionais, plano, privacidade e regras.', 'Configuração'],
@@ -921,7 +920,7 @@ function render(fromFit) {
   if (typeof renderFilterBar === 'function') renderFilterBar();
   const rs = filtered();
   const views = { geral: viewGeral, agentes: viewAgentesV2, modelos: viewModelos, ext: viewExt, sessoes: viewSessoesV1, audit: viewAuditV2, precos: viewPrecos, perfis: viewPerfis, add: viewAdd, explore: viewExplore,
-    diagnosticos: viewDiagnosticos, orchestra: viewOrchestra, eficiencia: viewEficiencia, custos: viewCustos, assuntos: viewAssuntos, config: viewConfig };
+    diagnosticos: viewDiagnosticos, eficiencia: viewEficiencia, custos: viewCustos, assuntos: viewAssuntos, config: viewConfig };
   const sy = $('#view').scrollTop;
   $('#view').innerHTML = views[S.tab](rs);
   $('#view').scrollTop = sy;
@@ -1005,8 +1004,7 @@ $('#view').addEventListener('scroll', () => { tipEl.classList.remove('on'); tipF
 // ---------- eventos ----------
 $('#tabs').innerHTML = TABS.map(([k, l, i, , g], idx) => (idx === 0 || TABS[idx - 1][4] !== g ? `<div class="navsec">${g}</div>` : '') + `<button data-tab="${k}">${ico(i)}<span>${l}</span></button>`).join('');
 $('#tabs').onclick = (e) => { const b = e.target.closest('[data-tab]'); if (b) { if (S.tab === 'sessoes' && b.dataset.tab === 'sessoes' && S.V) { S.V.sid = null; S.V.sel = null; }
-    if (S.tab === 'agentes' && b.dataset.tab === 'agentes' && S.A) S.A = { name: null, sub: 'resumo' };
-    if (S.tab === 'orchestra' && b.dataset.tab === 'orchestra' && S.O) S.O.agent = null; S.tab = b.dataset.tab; render(); if (S.tab === 'explore') loadExplore(); } };
+    if (S.tab === 'agentes' && b.dataset.tab === 'agentes' && S.A) S.A = { name: null, sub: 'resumo' }; S.tab = b.dataset.tab; render(); if (S.tab === 'explore') loadExplore(); } };
 $('#period').onchange = (e) => { S.period = +e.target.value; render(); };
 setTimeout(readHash, 0); // depois de v1.js carregar
 $('#project').onchange = (e) => { S.project = e.target.value; render(); };
