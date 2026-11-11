@@ -110,7 +110,7 @@ Testado no Windows 11. Os caminhos usados (`~/.claude`) são os mesmos no macOS 
 
 **Configuração**
 
-- **Perfis** — modelo, plugins, MCP, skills e instruções fixas aplicados a toda sessão nova (com prévia e backup); exportáveis para arquivo ou para o repositório do time.
+- **Perfis** — modelo, plugins, MCP, skills e instruções fixas aplicados a toda sessão nova (com prévia e backup); exportáveis para arquivo ou para o repositório do time. Um hook `SessionStart` confere o perfil a cada sessão aberta e corrige o que divergiu; salvar o perfil ativo já reaplica. A aba Perfis valida a próxima sessão pelos arquivos ou abrindo uma sessão real. Marcando **Orchestra Core** no perfil, o app instala o plugin sozinho e a aba Orchestra aparece no menu; o perfil ativo fica visível no canto inferior esquerdo.
 - **Preços** — tabela usada nas estimativas.
 - **Configurações** — fontes de dados, coletores opcionais, plano e orçamento, retenção, exclusão de dados e parâmetros das regras.
 
@@ -139,6 +139,7 @@ src/
   catalog.js         diretório oficial, registry de MCP, índice da comunidade
   github.js          busca no GitHub (gh autenticado ou API pública)
   profiles.js        perfis aplicados ao Claude Code
+  profilesync.js     hook SessionStart que confere o perfil a cada sessão
 renderer/            interface (HTML/CSS/JS sem framework)
 test/                testes (node:test) com transcritos sintéticos
 registry/            registry da comunidade (index.json + validação por Pull Request)
@@ -151,7 +152,7 @@ Sem dependências de runtime além do Electron: `node:sqlite`, `node:http` e `no
 
 ```bash
 npm start            # app em modo desenvolvimento
-npm test             # 38 testes: deduplicação, incremental, privacidade, fórmulas, regras, filtros…
+npm test             # 48 testes: deduplicação, incremental, privacidade, fórmulas, regras, filtros…
 npm run dist:win     # instalador (também dist:mac e dist:linux)
 ```
 
