@@ -722,11 +722,12 @@ function viewPerfis() {
   }
   const act = P.profiles.find((x) => x.id === P.active);
   return '<h2>Perfis</h2><p class="sub">Cada perfil define modelo, plugins, MCP, skills e instruções fixas. Ao aplicar, o app grava em <code>~/.claude/settings.json</code> e num bloco próprio do <code>~/.claude/CLAUDE.md</code> — toda sessão nova do Claude Code segue o perfil sem você ativar nada no chat.</p>'
+    + (typeof pcCard === 'function' ? pcCard() : '')
     + '<div class="note" style="margin-bottom:12px">Perfil ativo: <b>' + (act ? esc(act.name) : 'nenhum') + '</b>' + (P.appliedAt ? ' · aplicado ' + fDate(P.appliedAt) : '') + (act ? ' <button class="btn" id="pdetach">Desvincular</button>' : '') + '</div>'
     + '<div class="pgrid"><div><div class="plist">' + list + '</div><button class="btn" id="pnew" style="width:100%;margin-top:8px">+ Novo perfil (da config atual)</button><button class="btn" id="pimp" style="width:100%;margin-top:6px">Importar arquivo…</button></div><div>' + ed + '</div></div>';
 }
 async function loadProfiles() { S.P = await window.ledger.profiles.get(); if (!S.editId && S.P.profiles.length) S.editId = S.P.active || S.P.profiles[0].id; }
-async function saveProfiles() { const r = await window.ledger.profiles.save({ profiles: S.P.profiles }); S.P = { ...S.P, ...r }; }
+async function saveProfiles() { const r = await window.ledger.profiles.save({ profiles: S.P.profiles }); S.P = { ...S.P, ...r }; if (r.synced && S.PC) S.PC.res = null; return r; }
 const toggle = (arr, id, off) => { const s = new Set(arr || []); if (off) s.add(id); else s.delete(id); return [...s]; };
 
 // ---------- explorar ----------
@@ -1088,11 +1089,11 @@ $('#view').addEventListener('click', async (e) => {
   if (id === 'pnew') { const n = profileFromCurrent('Perfil ' + (S.P.profiles.length + 1)); S.P.profiles.push(n); S.editId = n.id; S.plan = null; await saveProfiles(); render(); }
   else if (id === 'pdup' && p) { const n = { ...JSON.parse(JSON.stringify(p)), id: uid(), name: p.name + ' (cópia)' }; S.P.profiles.push(n); S.editId = n.id; await saveProfiles(); render(); }
   else if (id === 'pdel' && p) { if (p.id === S.P.active) { S.pmsg = 'Desvincule o perfil ativo antes de excluir.'; render(); return; } S.P.profiles = S.P.profiles.filter((x) => x !== p); S.editId = S.P.profiles[0] && S.P.profiles[0].id; await saveProfiles(); render(); }
-  else if (id === 'psave') { await saveProfiles(); S.pmsg = 'Salvo (ainda não aplicado).'; render(); }
+  else if (id === 'psave') { try { const r = await saveProfiles(); S.pmsg = r.synced ? (r.changed ? 'Salvo e aplicado: a próxima sessão do Claude Code já abre assim.' : 'Salvo. O Claude Code já estava com esta configuração.') : 'Salvo. Este perfil não está ativo: use “Aplicar ao Claude Code…” para valer nas sessões.'; } catch (err) { S.pmsg = 'Erro: ' + err.message; } render(); }
   else if (id === 'pplan' && p) { await saveProfiles(); S.plan = await window.ledger.profiles.plan(p); S.pmsg = ''; render(); }
   else if (id === 'pcancel') { S.plan = null; render(); }
-  else if (id === 'papply' && p) { try { const r = await window.ledger.profiles.apply(p.id); S.plan = null; await loadProfiles(); S.pmsg = 'Aplicado. Abra uma sessão nova do Claude Code. Backup: ' + r.backup; } catch (err) { S.pmsg = 'Erro: ' + err.message; } render(); }
-  else if (id === 'pdetach') { const r = await window.ledger.profiles.detach(); await loadProfiles(); S.pmsg = 'Desvinculado. Backup: ' + r.backup; render(); }
+  else if (id === 'papply' && p) { try { const r = await window.ledger.profiles.apply(p.id); S.plan = null; await loadProfiles(); S.pmsg = 'Aplicado. Toda sessão nova do Claude Code abre com este perfil' + (r.hook ? ' e confere a configuração ao iniciar' : ' (Node.js não encontrado: sem conferência automática ao iniciar)') + '.' + (r.backup ? ' Backup: ' + r.backup : ''); if (S.PC) S.PC.res = null; } catch (err) { S.pmsg = 'Erro: ' + err.message; } render(); }
+  else if (id === 'pdetach') { const r = await window.ledger.profiles.detach(); await loadProfiles(); S.pmsg = 'Desvinculado. Backup: ' + r.backup; if (S.PC) S.PC.res = null; render(); }
 });
 $('#view').addEventListener('change', (e) => {
   if (e.target.id === 'donutsel') { S.donut = e.target.value; render(); return; }

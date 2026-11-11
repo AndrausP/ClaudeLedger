@@ -437,10 +437,25 @@ ipcMain.handle('profiles:import', async () => {
 let store;
 const pluginKeys = () => getInventory().plugins.map((p) => p.key);
 ipcMain.handle('profiles:get', () => ({ ...store.load(), current: store.current() }));
-ipcMain.handle('profiles:save', (_e, st) => { const cur = store.load(); store.save({ ...cur, profiles: st.profiles }); return store.load(); });
+ipcMain.handle('profiles:save', (_e, st) => store.saveProfiles(st.profiles, pluginKeys()));
 ipcMain.handle('profiles:plan', (_e, p) => store.plan(p, pluginKeys()));
 ipcMain.handle('profiles:apply', (_e, id) => store.apply(id, pluginKeys()));
 ipcMain.handle('profiles:detach', () => store.detach());
+// "a próxima sessão vai abrir com o perfil?" — deep=true abre uma sessão real (usa o plano)
+const SC = require('./src/services/sessioncheck');
+ipcMain.handle('profiles:check', async (_e, opts = {}) => {
+  try {
+    const cwd = opts.cwd && fs.existsSync(opts.cwd) ? opts.cwd : null;
+    const files = SC.fileCheck(store, pluginKeys(), cwd);
+    if (!opts.deep) return { ...files, deep: false, at: Date.now() };
+    const logBefore = store.syncHistory(1).count;
+    const live = await SC.probe(cwd || require('os').homedir());
+    if (!live.ok) return { ...files, deep: true, liveError: live.error, at: Date.now() };
+    const after = store.syncHistory(1);
+    live.hookRan = after.count > logBefore ? after.items[0] : null;
+    return { ...files, items: [...files.items, ...SC.compareLive(files.profile, live)], history: store.syncHistory(), deep: true, live: live.init, cost: live.cost, at: Date.now() };
+  } catch (err) { return { __error: err.message }; }
+});
 
 ipcMain.handle('pricing:set', (_e, rows) => {
   const clean = (Array.isArray(rows) ? rows : []).filter(r => r && r.match).map(r => ({ match: String(r.match), in: Number(r.in) || 0, out: Number(r.out) || 0 }));

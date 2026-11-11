@@ -48,3 +48,13 @@ button.fexbtn.on { border-color: rgba(242, 104, 95, .55); }
 .fexopt span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fexopt em { font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--mute); }
 .fexopt input:checked + span { color: var(--bad); text-decoration: line-through; }
+
+/* ====== Perfis: verificação da próxima sessão ====== */
+.pccard .card-h { flex-wrap: wrap; }
+.pccard .toolbar { margin: 4px 0 10px; }
+.pcrow { display: flex; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
+.pcrow i { display: flex; flex: none; padding-top: 2px; } .pcrow i svg { width: 17px; height: 17px; }
+.pcrow b { display: block; font-size: 13.5px; font-weight: 600; }
+.pcrow span { display: block; color: var(--mute); font-size: 13px; line-height: 1.5; margin-top: 2px; }
+
+.pchist { margin: 10px 0 6px; } .pchist summary { cursor: pointer; color: var(--mute); font-size: 13px; padding: 6px 0; } .pchist table { margin-top: 6px; }

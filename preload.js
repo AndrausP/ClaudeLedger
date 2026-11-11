@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('ledger', {
     plan: (p) => ipcRenderer.invoke('profiles:plan', p),
     apply: (id) => ipcRenderer.invoke('profiles:apply', id),
     detach: () => ipcRenderer.invoke('profiles:detach'),
+    check: (opts) => ipcRenderer.invoke('profiles:check', opts),
     exportFile: (p) => ipcRenderer.invoke('profiles:export', p),
     importFile: () => ipcRenderer.invoke('profiles:import'),
   },

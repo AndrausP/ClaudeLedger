@@ -178,7 +178,7 @@ function errors(db, F = {}) {
 // opções para o módulo de filtros
 function filterOptions(db) {
   return {
-    projects: db.prepare(`SELECT p.id, p.name, count(DISTINCT s.id) sessions FROM projects p JOIN sessions s ON s.project_id = p.id GROUP BY p.id ORDER BY p.name`).all(),
+    projects: db.prepare(`SELECT p.id, p.name, p.root_path, count(DISTINCT s.id) sessions FROM projects p JOIN sessions s ON s.project_id = p.id GROUP BY p.id ORDER BY p.name`).all(),
     agents: db.prepare(`SELECT a.name, max(a.kind) kind, count(DISTINCT a.session_id) sessions FROM agents a WHERE EXISTS (SELECT 1 FROM model_requests m WHERE m.agent_id = a.id) GROUP BY a.name ORDER BY max(a.kind) = 'subagent', a.name`).all(),
     models: db.prepare(`SELECT model, count(*) n FROM model_requests GROUP BY model ORDER BY n DESC`).all(),
     range: db.prepare('SELECT min(start_at) min, max(end_at) max FROM sessions').get(),
